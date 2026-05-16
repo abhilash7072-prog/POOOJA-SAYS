@@ -69,6 +69,7 @@
         .btn-yes {
             background-color: var(--pink-main);
             color: white;
+            z-index: 10;
         }
 
         .btn-yes:hover {
@@ -80,25 +81,30 @@
             background-color: #ced4da;
             color: #495057;
             position: absolute;
-            transition: left 0.1s ease, top 0.1s ease;
+            transition: left 0.15s ease, top 0.15s ease;
+            z-index: 5;
         }
 
-        /* Celebration screen styling */
         .japan-details {
             background: #fff0f6;
             border: 2px dashed #ff85a2;
             border-radius: 15px;
             padding: 15px;
-            margin-top: 20px;
+            margin-bottom: 20px;
             color: #c2255c;
             font-weight: bold;
+            width: 100%;
+        }
+
+        .flex-column {
+            flex-direction: column;
+            align-items: center;
         }
     </style>
 </head>
 <body>
 
     <div class="card" id="mainCard">
-        <!-- Stage 1 View -->
         <div id="contentBox">
             <div class="gif-container" id="emojiHeader">💝</div>
             <h1 id="questionText">Would you like to be my gf?</h1>
@@ -115,12 +121,11 @@
         const questionText = document.getElementById('questionText');
         const emojiHeader = document.getElementById('emojiHeader');
         const buttonGroup = document.getElementById('buttonGroup');
-        const noBtn = document.getElementById('noBtn');
-        const yesBtn = document.getElementById('yesBtn');
+        let noBtn = document.getElementById('noBtn');
+        let yesBtn = document.getElementById('yesBtn');
 
-        // Make the "No" button run away on hover and click
+        // Function to make the "No" button run away
         function moveNoButton() {
-            // Get random positions within the viewport boundaries, keeping it within reach but away from the cursor
             const x = Math.random() * (window.innerWidth - noBtn.offsetWidth - 40) + 20;
             const y = Math.random() * (window.innerHeight - noBtn.offsetHeight - 40) + 20;
             
@@ -129,37 +134,73 @@
             noBtn.style.top = y + 'px';
         }
 
+        // Attach runaway listeners to the initial No button
         noBtn.addEventListener('mouseover', moveNoButton);
         noBtn.addEventListener('click', moveNoButton);
+        noBtn.addEventListener('touchstart', moveNoButton); // Mobile friendly
 
-        // Handle the progression logic
         function nextStage() {
             if (stage === 1) {
-                // Advance to Stage 2 (Confirming the "Yes" choice)
+                // Click 2: "Yes only" screen
                 stage = 2;
                 emojiHeader.innerHTML = "🥰";
                 questionText.innerHTML = "Yay! Best decision ever! ❤️";
-                
-                // Remove the sneaky "No" button entirely for the final surprise
-                noBtn.remove();
-                
-                // Update the main button text for the next click
+                noBtn.style.display = 'none'; // Temporarily hide No button
                 yesBtn.innerHTML = "Click for a surprise! ✨";
-            } else if (stage === 2) {
-                // Advance to Stage 3 (The Japan Trip Reveal)
+
+            } else if (stage === 3) {
+                // Click 4: "Do you love me?" question
+                stage = 4;
+                emojiHeader.innerHTML = "👀❓";
+                questionText.innerHTML = "One more question... Do you love me?";
+                
+                // Re-create the layout with a fresh running "No" button
+                buttonGroup.classList.remove('flex-column');
+                buttonGroup.innerHTML = `
+                    <button class="btn-yes" id="yesBtn" onclick="nextStage()">Yes</button>
+                    <button class="btn-no" id="noBtn">No</button>
+                `;
+                
+                // Re-bind variables and events to the new elements
+                noBtn = document.getElementById('noBtn');
+                yesBtn = document.getElementById('yesBtn');
+                noBtn.addEventListener('mouseover', moveNoButton);
+                noBtn.addEventListener('click', moveNoButton);
+                noBtn.addEventListener('touchstart', moveNoButton);
+
+            } else if (stage === 4) {
+                // Click 5: Final Love Confirmation Screen!
+                stage = 5;
+                emojiHeader.innerHTML = "💖👩‍❤️‍👨✨";
+                questionText.innerHTML = "I knew it! Love you to Japan and back! See you after June 15! 🌸";
+                buttonGroup.innerHTML = ''; // Clear buttons completely
+            }
+        }
+
+        // Click 3 happens here: It handles the transition out of the Japan trip layout
+        function showLoveQuestion() {
+            stage = 3;
+            nextStage();
+        }
+        
+        // Overriding click 2 to display the Japan trip properly
+        window.addEventListener('click', function(e) {
+            if (e.target && e.target.id === 'yesBtn' && stage === 2) {
+                // Intercept the stage 2 click to inject the trip layout
+                e.stopPropagation(); 
                 emojiHeader.innerHTML = "🌸✈️🇯🇵";
                 questionText.innerHTML = "Pack your bags!";
-                
-                // Insert the trip details
+                buttonGroup.classList.add('flex-column');
                 buttonGroup.innerHTML = `
                     <div class="japan-details">
                         <p style="font-size: 1.3rem; margin: 0 0 10px 0;">🎉 FREE JAPAN TRIP! 🎉</p>
                         <p style="margin: 5px 0;">Duration: 5 Days</p>
                         <p style="margin: 5px 0;">When: After June 15th</p>
                     </div>
+                    <button class="btn-yes" id="nextSurpriseBtn" onclick="showLoveQuestion()">Next Surprise 🎁</button>
                 `;
             }
-        }
+        }, true);
     </script>
 </body>
 </html>
